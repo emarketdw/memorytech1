@@ -518,27 +518,27 @@ select.form-control option { background: var(--bg-elevated); }
           <h3>⚙️ Configurar Firebase</h3>
           <div class="form-group">
             <label>API Key</label>
-            <input class="form-control" id="AIzaSyBXnmaPWJ87-gYRRQ_1_A_1XcrAbHh1Lx8" placeholder="AIzaSy...">
+            <input class="form-control" id="fb_apiKey" placeholder="AIzaSy..." value="AIzaSyBXnmaPWJ87-gYRRQ_1_A_1XcrAbHh1Lx8">
           </div>
           <div class="form-group">
             <label>Auth Domain</label>
-            <input class="form-control" id="memorytech-ef982.firebaseapp.com" placeholder="projeto.firebaseapp.com">
+            <input class="form-control" id="fb_authDomain" placeholder="projeto.firebaseapp.com" value="memorytech-ef982.firebaseapp.com">
           </div>
           <div class="form-group">
             <label>Project ID</label>
-            <input class="form-control" id="memorytech-ef982" placeholder="meu-projeto-id">
+            <input class="form-control" id="fb_projectId" placeholder="meu-projeto-id" value="memorytech-ef982">
           </div>
           <div class="form-group">
             <label>Storage Bucket</label>
-            <input class="form-control" id="memorytech-ef982.firebasestorage.app" placeholder="projeto.appspot.com">
+            <input class="form-control" id="fb_storageBucket" placeholder="projeto.appspot.com" value="memorytech-ef982.firebasestorage.app">
           </div>
           <div class="form-group">
             <label>Messaging Sender ID</label>
-            <input class="form-control" id="687970822089" placeholder="123456789">
+            <input class="form-control" id="fb_messagingSenderId" placeholder="123456789" value="687970822089">
           </div>
           <div class="form-group">
             <label>App ID</label>
-            <input class="form-control" id="1:687970822089:web:89c8df93c2abcbfc402a18" placeholder="1:123456789:web:abc...">
+            <input class="form-control" id="fb_appId" placeholder="1:123456789:web:abc..." value="1:687970822089:web:89c8df93c2abcbfc402a18">
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
             <button class="btn btn-primary" onclick="saveFirebaseConfig()">💾 Salvar &amp; Conectar</button>
@@ -831,12 +831,12 @@ async function manualSync() {
 // ============================================================
 function saveFirebaseConfig() {
   const cfg = {
-    apiKey:            document.getElementById('AIzaSyBXnmaPWJ87-gYRRQ_1_A_1XcrAbHh1Lx8').value.trim(),
-    authDomain:        document.getElementById('memorytech-ef982.firebaseapp.com"').value.trim(),
-    projectId:         document.getElementById('memorytech-ef982').value.trim(),
-    storageBucket:     document.getElementById('memorytech-ef982.firebasestorage.app').value.trim(),
-    messagingSenderId: document.getElementById('687970822089').value.trim(),
-    appId:             document.getElementById('1:687970822089:web:89c8df93c2abcbfc402a18').value.trim(),
+    apiKey:            document.getElementById('fb_apiKey').value.trim(),
+    authDomain:        document.getElementById('fb_authDomain').value.trim(),
+    projectId:         document.getElementById('fb_projectId').value.trim(),
+    storageBucket:     document.getElementById('fb_storageBucket').value.trim(),
+    messagingSenderId: document.getElementById('fb_messagingSenderId').value.trim(),
+    appId:             document.getElementById('fb_appId').value.trim(),
   };
   if (!cfg.apiKey || !cfg.projectId) { toast('Preencha pelo menos API Key e Project ID', 'error'); return; }
   localStorage.setItem('techmemory_firebase', JSON.stringify(cfg));
