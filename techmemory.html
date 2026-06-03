@@ -206,11 +206,18 @@ body {
 .data-table { background: var(--bg-elevated); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); margin-bottom: 10px; overflow: hidden; transition: var(--transition); }
 .data-table:hover { border-color: var(--border); }
 .data-item { padding: 13px; }
-.item-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.item-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 0px; }
 .item-title { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-.item-title h4 { font-size: 14px; font-weight: 600; word-break: break-word; }
+.item-title h4 { font-size: 14px; font-weight: 600; word-break: break-word; cursor: pointer; }
+.item-title h4:hover { color: var(--accent-cyan); }
 .item-content { font-size: 13px; line-height: 1.6; color: var(--text-soft); background: rgba(0,0,0,.18); padding: 9px; border-radius: var(--radius-md); margin: 7px 0; white-space: pre-wrap; word-break: break-word; }
 body.light .item-content { background: rgba(0,0,0,.04); }
+
+/* ===== COLLAPSE/EXPAND ===== */
+.item-collapsed { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, opacity 0.3s ease; opacity: 0; }
+.item-collapsed.expanded { max-height: 500px; opacity: 1; }
+.item-meta { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; }
+.toggle-expand-btn { padding: 5px 10px; font-size: 11px; background: var(--accent-blue); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); }
 
 /* ===== BADGES ===== */
 .badge { display: inline-block; padding: 2px 7px; border-radius: var(--radius-xl); font-size: 10px; font-weight: 600; }
@@ -824,12 +831,12 @@ async function manualSync() {
 // ============================================================
 function saveFirebaseConfig() {
   const cfg = {
-    apiKey:            document.getElementById('fb_apiKey').value.trim(),
-    authDomain:        document.getElementById('fb_authDomain').value.trim(),
-    projectId:         document.getElementById('fb_projectId').value.trim(),
-    storageBucket:     document.getElementById('fb_storageBucket').value.trim(),
-    messagingSenderId: document.getElementById('fb_messagingSenderId').value.trim(),
-    appId:             document.getElementById('fb_appId').value.trim(),
+    apiKey:            document.getElementById('AIzaSyBXnmaPWJ87-gYRRQ_1_A_1XcrAbHh1Lx8').value.trim(),
+    authDomain:        document.getElementById('memorytech-ef982.firebaseapp.com"').value.trim(),
+    projectId:         document.getElementById('memorytech-ef982').value.trim(),
+    storageBucket:     document.getElementById('memorytech-ef982.firebasestorage.app').value.trim(),
+    messagingSenderId: document.getElementById('687970822089').value.trim(),
+    appId:             document.getElementById('1:687970822089:web:89c8df93c2abcbfc402a18').value.trim(),
   };
   if (!cfg.apiKey || !cfg.projectId) { toast('Preencha pelo menos API Key e Project ID', 'error'); return; }
   localStorage.setItem('techmemory_firebase', JSON.stringify(cfg));
@@ -1008,11 +1015,26 @@ async function renderNotes() {
             <button class="btn-icon" onclick="deleteNote('${n.id}')">🗑️</button>
           </div>
         </div>
-        <div class="item-content">${escapeHtml(n.content || '').replace(/\n/g, '<br>')}</div>
-        <div>${(n.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join(' ')}</div>
-        <div style="font-size:10px;color:var(--text-muted);margin-top:6px;">${formatDate(n.date)}</div>
+        
+        <div class="item-collapsed" id="note-content-${n.id}">
+          <div class="item-content">${escapeHtml(n.content || '').replace(/\n/g, '<br>')}</div>
+          <div style="margin-top:6px;">${(n.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join(' ')}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:6px;">${formatDate(n.date)}</div>
+        </div>
+        
+        <div style="margin-top:8px;">
+          <button class="toggle-expand-btn" onclick="toggleNoteExpand('note-content-${n.id}', this)">📖 Ver Mais</button>
+        </div>
       </div>
     </div>`).join('');
+}
+
+function toggleNoteExpand(elementId, btn) {
+  const el = document.getElementById(elementId);
+  if (el) {
+    el.classList.toggle('expanded');
+    btn.textContent = el.classList.contains('expanded') ? '🔼 Ver Menos' : '📖 Ver Mais';
+  }
 }
 
 function openNoteModal(note = null) {
@@ -1075,15 +1097,18 @@ async function renderBookmarks() {
   c.innerHTML = filtered.map(b => `
     <div class="data-table"><div class="data-item">
       <div class="item-header">
-        <div>
-          <h4>${escapeHtml(b.title)}</h4>
-          <a href="${escapeHtml(b.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-cyan);font-size:12px;">${escapeHtml(b.url)}</a>
-          ${b.notes ? `<p style="margin-top:5px;font-size:12px;">${escapeHtml(b.notes)}</p>` : ''}
-        </div>
+        <div><h4>🔖 ${escapeHtml(b.title)}</h4></div>
         <div style="display:flex;gap:4px;">
           <button class="btn-icon" onclick="editBookmark('${b.id}')">✏️</button>
           <button class="btn-icon" onclick="deleteBookmark('${b.id}')">🗑️</button>
         </div>
+      </div>
+      <div class="item-collapsed" id="bookmark-content-${b.id}">
+        <a href="${escapeHtml(b.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-cyan);font-size:12px;word-break:break-all;">${escapeHtml(b.url)}</a>
+        ${b.notes ? `<p style="margin-top:5px;font-size:12px;">${escapeHtml(b.notes)}</p>` : ''}
+      </div>
+      <div style="margin-top:8px;">
+        <button class="toggle-expand-btn" onclick="toggleNoteExpand('bookmark-content-${b.id}', this)">📖 Ver Mais</button>
       </div>
     </div></div>`).join('');
 }
@@ -1128,15 +1153,19 @@ async function renderIdeas() {
   c.innerHTML = filtered.map(i => `
     <div class="data-table"><div class="data-item">
       <div class="item-header">
-        <div>
-          <h4>💡 ${escapeHtml(i.title)}</h4>
-          ${i.description ? `<p style="font-size:13px;margin-top:4px;">${escapeHtml(i.description)}</p>` : ''}
+        <div><h4>💡 ${escapeHtml(i.title)}</h4>
           <span class="badge ${i.priority === 'Alta' ? 'badge-gold' : i.priority === 'Baixa' ? 'badge-blue' : 'badge-violet'}" style="margin-top:5px;">${escapeHtml(i.priority || 'Média')}</span>
         </div>
         <div style="display:flex;gap:4px;">
           <button class="btn-icon" onclick="editIdea('${i.id}')">✏️</button>
           <button class="btn-icon" onclick="deleteIdea('${i.id}')">🗑️</button>
         </div>
+      </div>
+      <div class="item-collapsed" id="idea-content-${i.id}">
+        ${i.description ? `<div class="item-content">${escapeHtml(i.description).replace(/\n/g, '<br>')}</div>` : ''}
+      </div>
+      <div style="margin-top:8px;">
+        <button class="toggle-expand-btn" onclick="toggleNoteExpand('idea-content-${i.id}', this)">📖 Ver Mais</button>
       </div>
     </div></div>`).join('');
 }
@@ -1184,15 +1213,19 @@ async function renderProjects() {
   c.innerHTML = filtered.map(p => `
     <div class="data-table"><div class="data-item">
       <div class="item-header">
-        <div>
-          <h4>📁 ${escapeHtml(p.name)}</h4>
-          ${p.description ? `<p style="font-size:13px;margin-top:3px;">${escapeHtml(p.description)}</p>` : ''}
+        <div><h4>📁 ${escapeHtml(p.name)}</h4>
           <span class="badge ${p.status === 'Concluído' ? 'badge-green' : p.status === 'Em andamento' ? 'badge-cyan' : 'badge-blue'}" style="margin-top:5px;">${escapeHtml(p.status || 'Planejamento')}</span>
         </div>
         <div style="display:flex;gap:4px;">
           <button class="btn-icon" onclick="editProject('${p.id}')">✏️</button>
           <button class="btn-icon" onclick="deleteProject('${p.id}')">🗑️</button>
         </div>
+      </div>
+      <div class="item-collapsed" id="project-content-${p.id}">
+        ${p.description ? `<div class="item-content">${escapeHtml(p.description).replace(/\n/g, '<br>')}</div>` : ''}
+      </div>
+      <div style="margin-top:8px;">
+        <button class="toggle-expand-btn" onclick="toggleNoteExpand('project-content-${p.id}', this)">📖 Ver Mais</button>
       </div>
     </div></div>`).join('');
 }
@@ -1244,12 +1277,11 @@ async function renderTasks() {
   if (!filtered.length) { c.innerHTML = '<div class="empty-state">✅ Nenhuma tarefa</div>'; return; }
   c.innerHTML = filtered.map(t => `
     <div class="data-table"><div class="data-item">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
         <div style="display:flex;align-items:center;gap:10px;flex:1;">
           <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask('${t.id}')" style="width:17px;height:17px;cursor:pointer;accent-color:var(--accent-cyan);">
           <div>
             <h4 style="${t.completed ? 'text-decoration:line-through;opacity:.55;' : ''}">${escapeHtml(t.title)}</h4>
-            ${t.description ? `<p style="font-size:12px;color:var(--text-muted);margin-top:2px;">${escapeHtml(t.description)}</p>` : ''}
             <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;">
               <span class="badge ${t.priority === 'Alta' ? 'badge-gold' : t.priority === 'Baixa' ? 'badge-blue' : 'badge-violet'}">${escapeHtml(t.priority || 'Média')}</span>
               <span class="badge">${escapeHtml(t.status || 'Pendente')}</span>
@@ -1262,6 +1294,10 @@ async function renderTasks() {
           <button class="btn-icon" onclick="deleteTask('${t.id}')">🗑️</button>
         </div>
       </div>
+      <div class="item-collapsed" id="task-content-${t.id}" style="margin-top:8px;">
+        ${t.description ? `<div class="item-content">${escapeHtml(t.description).replace(/\n/g, '<br>')}</div>` : ''}
+      </div>
+      ${t.description ? `<div style="margin-top:8px;"><button class="toggle-expand-btn" onclick="toggleNoteExpand('task-content-${t.id}', this)">📖 Ver Mais</button></div>` : ''}
     </div></div>`).join('');
 }
 
@@ -1335,7 +1371,6 @@ async function renderReminders() {
       <div class="item-header">
         <div>
           <h4>⏰ ${escapeHtml(r.title)}</h4>
-          ${r.description ? `<p style="font-size:12px;margin-top:3px;">${escapeHtml(r.description)}</p>` : ''}
           <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;">
             <span class="badge badge-gold">📅 ${formatDate(r.date)}</span>
             <span class="badge badge-blue">🕐 ${escapeHtml(r.time || '--:--')}</span>
@@ -1346,6 +1381,10 @@ async function renderReminders() {
           <button class="btn-icon" onclick="deleteReminder('${r.id}')">🗑️</button>
         </div>
       </div>
+      <div class="item-collapsed" id="reminder-content-${r.id}" style="margin-top:8px;">
+        ${r.description ? `<div class="item-content">${escapeHtml(r.description).replace(/\n/g, '<br>')}</div>` : ''}
+      </div>
+      ${r.description ? `<div style="margin-top:8px;"><button class="toggle-expand-btn" onclick="toggleNoteExpand('reminder-content-${r.id}', this)">📖 Ver Mais</button></div>` : ''}
     </div></div>`).join('');
 }
 
