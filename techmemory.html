@@ -735,6 +735,13 @@ async function initFirebase(config) {
     await firestoreDB.enablePersistence({ synchronizeTabs: true }).catch(() => {});
     firebaseReady = true;
     updateSyncBadge('online');
+    
+    // Sincronizar com Firestore ao conectar
+    await syncWithFirebase();
+    
+    // Configurar listeners em tempo real para sincronização bidirecional
+    setupRealtimeSync();
+    
     return true;
   } catch (err) {
     console.error('Firebase init error:', err);
@@ -798,8 +805,22 @@ async function remove(storeName, id) {
 }
 
 async function load(storeName) {
-  // Sempre lê do IndexedDB (rápido e offline)
-  return loadFromDB(storeName);
+  // Primeiro tenta ler do IndexedDB (rápido e offline)
+  let local = await loadFromDB(storeName);
+  
+  // Se IndexedDB está vazio E Firebase está pronto, sincroniza do Firestore
+  if ((!local || local.length === 0) && firebaseReady && firestoreDB) {
+    const remote = await fbLoadAll(storeName);
+    if (remote && remote.length > 0) {
+      // Salva os dados do Firestore localmente e retorna
+      for (const item of remote) {
+        await saveToDB(storeName, item);
+      }
+      return remote;
+    }
+  }
+  
+  return local || [];
 }
 
 // ============================================================
@@ -823,6 +844,68 @@ async function manualSync() {
     console.error(e);
   } finally {
     if (btn) btn.textContent = '🔄 Sincronizar';
+  }
+}
+
+// ============================================================
+//  AUTO-SYNC — Sincroniza ao conectar Firebase
+// ============================================================
+async function syncWithFirebase() {
+  if (!firebaseReady) return;
+  try {
+    for (const store of STORES) {
+      const remote = await fbLoadAll(store);
+      if (!remote) continue;
+      // Mescla dados: local + remoto
+      const local = await loadFromDB(store);
+      const merged = [...local || []];
+      for (const item of remote) {
+        const exists = merged.findIndex(x => x.id === item.id);
+        if (exists >= 0) {
+          // Mantém versão mais recente
+          if (new Date(item.date) > new Date(merged[exists].date)) {
+            merged[exists] = item;
+          }
+        } else {
+          merged.push(item);
+        }
+      }
+      // Salva merged localmente
+      await clearStore(store);
+      for (const item of merged) await saveToDB(store, item);
+    }
+    await loadAllData();
+  } catch (e) {
+    console.warn('syncWithFirebase error:', e);
+  }
+}
+
+// ============================================================
+//  REAL-TIME SYNC — Listeners para mudanças em tempo real
+// ============================================================
+function setupRealtimeSync() {
+  if (!firebaseReady || !firestoreDB) return;
+  
+  for (const store of STORES) {
+    firestoreDB.collection(store).onSnapshot(
+      async (snapshot) => {
+        // Quando há mudanças no Firestore, atualiza localmente
+        snapshot.docChanges().forEach(async (change) => {
+          const data = change.doc.data();
+          if (change.type === 'added' || change.type === 'modified') {
+            // Atualiza localmente
+            await saveToDB(store, data);
+          } else if (change.type === 'removed') {
+            await deleteFromDB(store, data.id);
+          }
+        });
+        // Recarrega dados da tela se aplicável
+        await loadAllData();
+      },
+      (error) => {
+        console.warn(`Real-time sync error for ${store}:`, error);
+      }
+    );
   }
 }
 
