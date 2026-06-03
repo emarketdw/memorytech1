@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+<meta name="theme-color" content="#0a0f1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>TechMemory - Sistema Offline Completo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --bg-deep: #090d17;
+  --bg-surface: #0f1623;
+  --bg-elevated: #1a2235;
+  --bg-hover: #243045;
+  --text-main: #e8edf5;
+  --text-soft: #b8c5d8;
+  --text-muted: #6b7f99;
+  --accent-cyan: #00e5ff;
+  --accent-cyan-dark: #00b8cc;
+  --accent-blue: #3b82f6;
+  --accent-blue-dark: #2563eb;
+  --accent-violet: #8b5cf6;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --border: rgba(0, 229, 255, 0.15);
+  --border-soft: rgba(255,255,255,0.06);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.3);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.4);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  --glow: 0 0 20px rgba(0,229,255,0.15);
+}
+
+body.light {
+  --bg-deep: #f0f4f8;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f5f8fc;
+  --bg-hover: #e2eaf4;
+  --text-main: #0f1623;
+  --text-soft: #2d3e56;
+  --text-muted: #6b7f99;
+  --border: rgba(59,130,246,0.18);
+  --border-soft: rgba(0,0,0,0.06);
+  --glow: 0 0 20px rgba(59,130,246,0.12);
+}
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-main);
+  height: 100vh;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.app { display: flex; height: 100vh; width: 100%; }
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: 260px;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  z-index: 200;
+  flex-shrink: 0;
+}
+
+.sidebar-header {
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex-shrink: 0;
+}
+
+.logo {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  box-shadow: var(--glow);
+  flex-shrink: 0;
+}
+
+.logo-text h1 {
+  font-size: 15px; font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+.logo-text span { font-size: 9px; color: var(--text-muted); display: block; font-family: 'JetBrains Mono', monospace; }
+
+/* Firebase status badge */
+.sync-badge {
+  margin-left: auto;
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.sync-badge.online  { background: rgba(16,185,129,.15); color: var(--success); border: 1px solid rgba(16,185,129,.3); }
+.sync-badge.offline { background: rgba(251,191,36,.12); color: var(--warning); border: 1px solid rgba(251,191,36,.25); }
+.sync-badge.error   { background: rgba(239,68,68,.12);  color: var(--danger);  border: 1px solid rgba(239,68,68,.25); }
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 14px 10px; }
+
+.nav-section { margin-bottom: 18px; }
+
+.nav-section-title {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.2px; color: var(--accent-cyan);
+  padding: 6px 10px 4px; font-family: 'JetBrains Mono', monospace;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: var(--radius-md);
+  cursor: pointer; transition: var(--transition);
+  font-size: 13px; font-weight: 500;
+  color: var(--text-soft); margin-bottom: 2px;
+}
+.nav-item:hover { background: var(--bg-hover); color: var(--text-main); transform: translateX(3px); }
+.nav-item.active {
+  background: linear-gradient(90deg, rgba(0,229,255,.12), rgba(139,92,246,.08));
+  color: var(--accent-cyan); border-left: 2px solid var(--accent-cyan);
+}
+
+.sidebar-footer { padding: 14px; border-top: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+
+/* ===== MAIN ===== */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+.topbar {
+  background: var(--bg-surface); min-height: 56px; padding: 0 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex-shrink: 0;
+}
+
+.menu-btn { display: none; background: none; border: none; color: var(--text-main); cursor: pointer; font-size: 22px; padding: 8px; }
+
+.search-global { flex: 1; min-width: 150px; position: relative; }
+.search-global input {
+  width: 100%; padding: 9px 14px 9px 34px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); color: var(--text-main);
+  font-size: 13px; transition: var(--transition); font-family: inherit;
+}
+.search-global input:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 0 2px rgba(0,229,255,.15); }
+.search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; pointer-events: none; }
+
+.content { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+
+/* ===== PAGES ===== */
+.page { display: none; animation: fadeIn .3s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.page-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
+}
+.page-header h2 { font-size: 19px; font-weight: 700; }
+
+/* ===== STAT CARDS ===== */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 18px; }
+
+.stat-card {
+  background: var(--bg-elevated); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg); padding: 14px; transition: var(--transition);
+  cursor: pointer; text-align: center;
+}
+.stat-card:hover { border-color: var(--border); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.stat-card:active { transform: scale(.98); }
+.stat-icon { width: 38px; height: 38px; background: rgba(0,229,255,.08); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 19px; margin: 0 auto 8px; }
+.stat-card h3 { font-size: 21px; font-weight: 700; margin-bottom: 3px; }
+.stat-card p { font-size: 11px; color: var(--text-muted); }
+
+/* ===== BUTTONS ===== */
+.btn { padding: 8px 15px; border-radius: var(--radius-xl); font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 5px; font-family: inherit; }
+.btn-primary { background: linear-gradient(135deg, var(--accent-blue), var(--accent-blue-dark)); color: white; }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-primary:active { transform: scale(.97); }
+.btn-warning { background: linear-gradient(135deg, var(--accent-cyan), var(--accent-cyan-dark)); color: #090d17; }
+.btn-danger { background: linear-gradient(135deg, var(--danger), #dc2626); color: white; }
+.btn-secondary { background: var(--bg-elevated); color: var(--text-main); border: 1px solid var(--border); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+.btn-icon { padding: 5px 9px; background: var(--bg-elevated); border: 1px solid var(--border-soft); border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-soft); }
+.btn-icon:hover { border-color: var(--border); color: var(--text-main); }
+
+/* ===== LISTS ===== */
+.data-table { background: var(--bg-elevated); border: 1px solid var(--border-soft); border-radius: var(--radius-lg); margin-bottom: 10px; overflow: hidden; transition: var(--transition); }
+.data-table:hover { border-color: var(--border); }
+.data-item { padding: 13px; }
+.item-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.item-title { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.item-title h4 { font-size: 14px; font-weight: 600; word-break: break-word; }
+.item-content { font-size: 13px; line-height: 1.6; color: var(--text-soft); background: rgba(0,0,0,.18); padding: 9px; border-radius: var(--radius-md); margin: 7px 0; white-space: pre-wrap; word-break: break-word; }
+body.light .item-content { background: rgba(0,0,0,.04); }
+
+/* ===== BADGES ===== */
+.badge { display: inline-block; padding: 2px 7px; border-radius: var(--radius-xl); font-size: 10px; font-weight: 600; }
+.badge-cyan   { background: rgba(0,229,255,.15);   color: var(--accent-cyan); }
+.badge-gold   { background: rgba(251,191,36,.15);  color: var(--warning); }
+.badge-blue   { background: rgba(59,130,246,.15);  color: var(--accent-blue); }
+.badge-green  { background: rgba(16,185,129,.15);  color: var(--success); }
+.badge-violet { background: rgba(139,92,246,.15);  color: var(--accent-violet); }
+
+.tag { display: inline-block; padding: 2px 7px; background: var(--bg-hover); border-radius: var(--radius-xl); font-size: 10px; color: var(--text-muted); }
+
+.filter-bar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.filter-bar input, .filter-bar select {
+  padding: 7px 11px; background: var(--bg-elevated); border: 1px solid var(--border-soft);
+  border-radius: var(--radius-xl); color: var(--text-main); font-size: 12px;
+  flex: 1; min-width: 110px; font-family: inherit;
+}
+.filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: var(--accent-cyan); }
+
+/* ===== MODAL ===== */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--bg-surface); border-radius: var(--radius-xl); width: 100%; max-width: 500px; max-height: 90vh; overflow: auto; border: 1px solid var(--border); box-shadow: var(--shadow-lg), var(--glow); }
+.modal-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--bg-surface); z-index: 1; }
+.modal-header h3 { font-size: 15px; font-weight: 700; }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 0 6px; line-height: 1; }
+.modal-close:hover { color: var(--text-main); }
+.modal-body { padding: 18px; }
+.modal-footer { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; position: sticky; bottom: 0; background: var(--bg-surface); }
+
+/* ===== FORMS ===== */
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-soft); text-transform: uppercase; letter-spacing: .5px; }
+.form-control { width: 100%; padding: 8px 11px; background: var(--bg-elevated); border: 1px solid var(--border-soft); border-radius: var(--radius-md); color: var(--text-main); font-size: 13px; font-family: inherit; transition: var(--transition); }
+.form-control:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 0 2px rgba(0,229,255,.1); }
+textarea.form-control { resize: vertical; min-height: 80px; }
+select.form-control option { background: var(--bg-elevated); }
+
+/* ===== TOAST ===== */
+.toast-container { position: fixed; bottom: 64px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-direction: column; gap: 7px; align-items: center; pointer-events: none; width: auto; max-width: 90%; }
+.toast { background: var(--bg-surface); border-left: 3px solid var(--accent-cyan); padding: 8px 13px; border-radius: var(--radius-md); font-size: 12px; box-shadow: var(--shadow-lg); animation: slideUp .3s ease; pointer-events: auto; text-align: center; }
+.toast.error { border-left-color: var(--danger); }
+.toast.info  { border-left-color: var(--accent-blue); }
+@keyframes slideUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+.empty-state { text-align: center; padding: 36px 20px; color: var(--text-muted); }
+.progress-bar { background: var(--bg-hover); border-radius: var(--radius-xl); height: 5px; overflow: hidden; }
+.progress-fill { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-violet)); height: 100%; transition: width .4s ease; }
+
+/* ===== FIREBASE CONFIG PAGE ===== */
+.config-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; margin-bottom: 14px; }
+.config-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.config-status { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.step-block { background: var(--bg-surface); border: 1px solid var(--border-soft); border-radius: var(--radius-md); padding: 13px; margin-bottom: 10px; }
+.step-block h4 { font-size: 12px; font-weight: 700; margin-bottom: 7px; color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; }
+.step-block p, .step-block li { font-size: 12px; color: var(--text-soft); line-height: 1.6; }
+.step-block ol, .step-block ul { padding-left: 16px; }
+.code-block { background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px; margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent-cyan); overflow-x: auto; white-space: pre; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .sidebar { position: fixed; left: -260px; height: 100vh; top: 0; }
+  .sidebar.open { left: 0; }
+  .menu-btn { display: block; }
+  .mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 150; display: none; }
+  .mobile-overlay.show { display: block; }
+  .content { padding: 12px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .page-header h2 { font-size: 17px; }
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 4px; opacity: .5; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="mobile-overlay" id="mobileOverlay" onclick="toggleSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">💾</div>
+      <div class="logo-text">
+        <h1>TechMemory</h1>
+        <span>v2.1 · Offline + Cloud</span>
+      </div>
+      <span class="sync-badge offline" id="syncBadge">OFFLINE</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">📊 Principal</div>
+        <div class="nav-item active" data-page="dashboard">🏠 Dashboard</div>
+        <div class="nav-item" data-page="search">🔍 Busca Global</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">📝 Módulos</div>
+        <div class="nav-item" data-page="notes">📄 Anotações</div>
+        <div class="nav-item" data-page="bookmarks">🔖 Sites Favoritos</div>
+        <div class="nav-item" data-page="ideas">💡 Ideias</div>
+        <div class="nav-item" data-page="projects">📁 Projetos</div>
+        <div class="nav-item" data-page="tasks">✅ Tarefas</div>
+        <div class="nav-item" data-page="reminders">⏰ Lembretes</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">🔐 Segurança</div>
+        <div class="nav-item" data-page="vault">🔒 Cofre Pessoal</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">⚙️ Sistema</div>
+        <div class="nav-item" data-page="stats">📈 Estatísticas</div>
+        <div class="nav-item" data-page="backup">💾 Backup</div>
+        <div class="nav-item" data-page="firebase">🔥 Firebase</div>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn btn-warning" onclick="toggleTheme()" style="width:100%;">🌓 Alternar Tema</button>
+      <button class="btn btn-secondary btn-sm" onclick="manualSync()" style="width:100%;" id="syncBtn">🔄 Sincronizar</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <div class="search-global">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="globalSearchInput" placeholder="Buscar em tudo..." onkeyup="if(event.key==='Enter') executeGlobalSearch()">
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <h2>📊 Dashboard</h2>
+          <span id="currentDate" style="font-size:12px;color:var(--text-muted);"></span>
+        </div>
+        <div class="stats-grid" id="dashStats"></div>
+        <h3 style="margin-bottom:10px;font-size:13px;color:var(--text-muted);">📋 Atividades Recentes</h3>
+        <div id="activityList" style="background:var(--bg-elevated);border-radius:var(--radius-lg);padding:12px;"></div>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="page" id="page-search">
+        <div class="page-header"><h2>🔍 Busca Global</h2></div>
+        <div class="search-global" style="max-width:100%;margin-bottom:14px;">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchPageInput" placeholder="Digite sua busca..." onkeyup="if(event.key==='Enter') executeGlobalSearch()">
+        </div>
+        <div id="searchResults"></div>
+      </div>
+
+      <!-- NOTES -->
+      <div class="page" id="page-notes">
+        <div class="page-header">
+          <h2>📄 Anotações</h2>
+          <button class="btn btn-primary" onclick="openNoteModal()">+ Nova</button>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="noteSearch" placeholder="Pesquisar..." oninput="renderNotes()">
+          <select id="noteCategoryFilter" onchange="renderNotes()">
+            <option value="">Todas</option>
+            <option>Trabalho</option><option>Estudos</option><option>Pessoal</option><option>Ideias</option>
+          </select>
+        </div>
+        <div id="notesList"></div>
+      </div>
+
+      <!-- BOOKMARKS -->
+      <div class="page" id="page-bookmarks">
+        <div class="page-header">
+          <h2>🔖 Sites Favoritos</h2>
+          <button class="btn btn-primary" onclick="openBookmarkModal()">+ Site</button>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="bookmarkSearch" placeholder="Pesquisar..." oninput="renderBookmarks()">
+        </div>
+        <div id="bookmarksList"></div>
+      </div>
+
+      <!-- IDEAS -->
+      <div class="page" id="page-ideas">
+        <div class="page-header">
+          <h2>💡 Ideias</h2>
+          <button class="btn btn-primary" onclick="openIdeaModal()">+ Ideia</button>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="ideaSearch" placeholder="Pesquisar..." oninput="renderIdeas()">
+          <select id="ideaPriorityFilter" onchange="renderIdeas()">
+            <option value="">Todas</option><option>Baixa</option><option>Média</option><option>Alta</option>
+          </select>
+        </div>
+        <div id="ideasList"></div>
+      </div>
+
+      <!-- PROJECTS -->
+      <div class="page" id="page-projects">
+        <div class="page-header">
+          <h2>📁 Projetos</h2>
+          <button class="btn btn-primary" onclick="openProjectModal()">+ Projeto</button>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="projectSearch" placeholder="Pesquisar..." oninput="renderProjects()">
+          <select id="projectStatusFilter" onchange="renderProjects()">
+            <option value="">Todos</option><option>Planejamento</option><option>Em andamento</option><option>Concluído</option>
+          </select>
+        </div>
+        <div id="projectsList"></div>
+      </div>
+
+      <!-- TASKS -->
+      <div class="page" id="page-tasks">
+        <div class="page-header">
+          <h2>✅ Tarefas</h2>
+          <button class="btn btn-primary" onclick="openTaskModal()">+ Tarefa</button>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="taskSearch" placeholder="Pesquisar..." oninput="renderTasks()">
+          <select id="taskStatusFilter" onchange="renderTasks()">
+            <option value="">Todos</option><option>Pendente</option><option>Em andamento</option><option>Concluído</option>
+          </select>
+          <select id="taskPriorityFilter" onchange="renderTasks()">
+            <option value="">Todas</option><option>Baixa</option><option>Média</option><option>Alta</option>
+          </select>
+        </div>
+        <div id="tasksList"></div>
+      </div>
+
+      <!-- REMINDERS -->
+      <div class="page" id="page-reminders">
+        <div class="page-header">
+          <h2>⏰ Lembretes</h2>
+          <button class="btn btn-primary" onclick="openReminderModal()">+ Lembrete</button>
+        </div>
+        <div class="filter-bar">
+          <input type="text" id="reminderSearch" placeholder="Pesquisar..." oninput="renderReminders()">
+        </div>
+        <div id="remindersList"></div>
+      </div>
+
+      <!-- VAULT -->
+      <div class="page" id="page-vault">
+        <div class="page-header">
+          <h2>🔒 Cofre Pessoal</h2>
+          <button class="btn btn-primary" onclick="openVaultModal()">+ Item</button>
+        </div>
+        <div id="vaultContent"></div>
+      </div>
+
+      <!-- STATS -->
+      <div class="page" id="page-stats">
+        <div class="page-header"><h2>📈 Estatísticas</h2></div>
+        <div class="stats-grid" id="statsGrid"></div>
+        <div id="chartsArea"></div>
+      </div>
+
+      <!-- BACKUP -->
+      <div class="page" id="page-backup">
+        <div class="page-header"><h2>💾 Backup</h2></div>
+        <div class="stats-grid">
+          <div class="stat-card" onclick="exportData()">
+            <div class="stat-icon">📤</div><h3>Exportar</h3><p>JSON local</p>
+          </div>
+          <div class="stat-card" onclick="document.getElementById('importFile').click()">
+            <div class="stat-icon">📥</div><h3>Importar</h3><p>Restaurar</p>
+          </div>
+          <div class="stat-card" onclick="clearAllData()">
+            <div class="stat-icon">🗑️</div><h3>Limpar</h3><p>Tudo</p>
+          </div>
+        </div>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        <div class="config-card" style="margin-top:14px;">
+          <p style="font-size:12px;color:var(--text-muted);">
+            📌 Os dados são salvos localmente no navegador via IndexedDB (funciona offline).<br>
+            Se o Firebase estiver configurado, os dados também sincronizam na nuvem automaticamente.
+          </p>
+        </div>
+      </div>
+
+      <!-- FIREBASE CONFIG -->
+      <div class="page" id="page-firebase">
+        <div class="page-header"><h2>🔥 Configuração Firebase</h2></div>
+
+        <div class="config-card">
+          <h3>📡 Estado da Conexão</h3>
+          <div class="config-status">
+            <span class="sync-badge offline" id="fbStatusBadge">OFFLINE</span>
+            <span id="fbStatusText" style="font-size:12px;color:var(--text-muted);">Firebase não configurado</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="testFirebaseConnection()">🧪 Testar Conexão</button>
+        </div>
+
+        <div class="config-card">
+          <h3>⚙️ Configurar Firebase</h3>
+          <div class="form-group">
+            <label>API Key</label>
+            <input class="form-control" id="fb_apiKey" placeholder="AIzaSy...">
+          </div>
+          <div class="form-group">
+            <label>Auth Domain</label>
+            <input class="form-control" id="fb_authDomain" placeholder="projeto.firebaseapp.com">
+          </div>
+          <div class="form-group">
+            <label>Project ID</label>
+            <input class="form-control" id="fb_projectId" placeholder="meu-projeto-id">
+          </div>
+          <div class="form-group">
+            <label>Storage Bucket</label>
+            <input class="form-control" id="fb_storageBucket" placeholder="projeto.appspot.com">
+          </div>
+          <div class="form-group">
+            <label>Messaging Sender ID</label>
+            <input class="form-control" id="fb_messagingSenderId" placeholder="123456789">
+          </div>
+          <div class="form-group">
+            <label>App ID</label>
+            <input class="form-control" id="fb_appId" placeholder="1:123456789:web:abc...">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+            <button class="btn btn-primary" onclick="saveFirebaseConfig()">💾 Salvar &amp; Conectar</button>
+            <button class="btn btn-danger btn-sm" onclick="clearFirebaseConfig()">🗑️ Remover Config</button>
+          </div>
+        </div>
+
+        <div class="config-card">
+          <h3>📖 Como configurar o Firebase</h3>
+
+          <div class="step-block">
+            <h4>PASSO 1 — Criar projeto no Firebase</h4>
+            <ol>
+              <li>Acesse <strong>console.firebase.google.com</strong></li>
+              <li>Clique em <strong>"Criar um projeto"</strong></li>
+              <li>Escolha um nome (ex: <code>techmemory</code>)</li>
+              <li>Pode desativar o Google Analytics se preferir</li>
+              <li>Clique em <strong>"Criar projeto"</strong></li>
+            </ol>
+          </div>
+
+          <div class="step-block">
+            <h4>PASSO 2 — Adicionar app Web</h4>
+            <ol>
+              <li>No painel do projeto, clique no ícone <strong>&lt;/&gt; Web</strong></li>
+              <li>Dê um apelido ao app (ex: <code>techmemory-web</code>)</li>
+              <li>Clique em <strong>"Registrar app"</strong></li>
+              <li>Copie o objeto <code>firebaseConfig</code> que aparecer</li>
+              <li>Cole cada valor nos campos acima</li>
+            </ol>
+          </div>
+
+          <div class="step-block">
+            <h4>PASSO 3 — Ativar Firestore Database</h4>
+            <ol>
+              <li>No menu lateral do Firebase, clique em <strong>"Firestore Database"</strong></li>
+              <li>Clique em <strong>"Criar banco de dados"</strong></li>
+              <li>Escolha <strong>"Iniciar no modo de teste"</strong> (simplificado)</li>
+              <li>Selecione a região mais próxima (ex: <code>southamerica-east1</code>)</li>
+              <li>Clique em <strong>"Ativar"</strong></li>
+            </ol>
+          </div>
+
+          <div class="step-block">
+            <h4>PASSO 4 — Regras de segurança (modo teste)</h4>
+            <p>No modo teste as regras já permitem leitura/escrita por 30 dias. Para produção, configure regras em <strong>Firestore &gt; Regras</strong>:</p>
+            <div class="code-block">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true; // Apenas em desenvolvimento!
+    }
+  }
+}</div>
+          </div>
+
+          <div class="step-block">
+            <h4>PASSO 5 — Estrutura das coleções</h4>
+            <p>O TechMemory criará automaticamente estas coleções no Firestore:</p>
+            <div class="code-block">techmemory/
+  notes/       → anotações
+  bookmarks/   → sites favoritos
+  ideas/       → ideias
+  projects/    → projetos
+  tasks/       → tarefas
+  reminders/   → lembretes
+  vault/       → cofre pessoal
+  activity/    → log de atividades</div>
+          </div>
+
+          <div class="step-block">
+            <h4>ℹ️ Modo Offline</h4>
+            <p>Mesmo sem Firebase configurado, o TechMemory funciona completamente offline via IndexedDB. O Firebase é opcional e serve apenas para sincronização na nuvem entre dispositivos.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle"></h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Firebase SDK v9 compat (carregado dinamicamente) -->
+<script>
+'use strict';
+
+// ============================================================
+//  INDEXEDDB — ARMAZENAMENTO LOCAL OFFLINE
+// ============================================================
+let db;
+const DB_NAME  = 'TechMemoryDB';
+const DB_VERSION = 1;
+const STORES = ['notes','bookmarks','ideas','projects','tasks','reminders','vault','activity'];
+
+let notes = [], bookmarks = [], ideas = [], projects = [], tasks = [], reminders = [], vaultItems = [];
+let currentPage = 'dashboard';
+let modalSaveCallback = null;
+
+// ============================================================
+//  INIT INDEXEDDB
+// ============================================================
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => { db = req.result; resolve(db); };
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      STORES.forEach(s => {
+        if (!d.objectStoreNames.contains(s)) {
+          // activity uses string IDs just like the rest
+          d.createObjectStore(s, { keyPath: 'id' });
+        }
+      });
+    };
+  });
+}
+
+function saveToDB(storeName, data) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    tx.objectStore(storeName).put(data);
+    tx.oncomplete = () => resolve(data);
+    tx.onerror   = () => reject(tx.error);
+  });
+}
+
+function deleteFromDB(storeName, id) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    tx.objectStore(storeName).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror   = () => reject(tx.error);
+  });
+}
+
+function loadFromDB(storeName) {
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(storeName, 'readonly');
+    const req = tx.objectStore(storeName).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror   = () => reject(req.error);
+  });
+}
+
+async function clearStore(storeName) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    tx.objectStore(storeName).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror   = () => reject(tx.error);
+  });
+}
+
+// ============================================================
+//  FIREBASE — CONFIGURAÇÃO DINÂMICA
+// ============================================================
+let firebaseApp = null, firestoreDB = null, firebaseReady = false;
+
+function getFirebaseConfig() {
+  const raw = localStorage.getItem('techmemory_firebase');
+  return raw ? JSON.parse(raw) : null;
+}
+
+async function initFirebase(config) {
+  if (!config || !config.apiKey || !config.projectId) return false;
+  try {
+    // Carregar SDK dinamicamente
+    if (!window.firebase) {
+      await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
+      await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js');
+    }
+    // Inicializar (evitar duplicação)
+    if (firebase.apps && firebase.apps.length > 0) {
+      firebaseApp = firebase.apps[0];
+    } else {
+      firebaseApp = firebase.initializeApp(config);
+    }
+    firestoreDB = firebase.firestore(firebaseApp);
+    // Habilitar persistência offline do Firestore
+    await firestoreDB.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+    firebaseReady = true;
+    updateSyncBadge('online');
+    return true;
+  } catch (err) {
+    console.error('Firebase init error:', err);
+    firebaseReady = false;
+    updateSyncBadge('error');
+    return false;
+  }
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+function updateSyncBadge(state) {
+  const badge = document.getElementById('syncBadge');
+  const fbBadge = document.getElementById('fbStatusBadge');
+  const fbText  = document.getElementById('fbStatusText');
+  const labels  = { online: 'CLOUD', offline: 'OFFLINE', error: 'ERRO' };
+  if (badge)   { badge.className = `sync-badge ${state}`; badge.textContent = labels[state] || state.toUpperCase(); }
+  if (fbBadge) { fbBadge.className = `sync-badge ${state}`; fbBadge.textContent = labels[state] || state.toUpperCase(); }
+  if (fbText)  { fbText.textContent = state === 'online' ? 'Firebase conectado e sincronizando' : state === 'error' ? 'Erro ao conectar ao Firebase' : 'Firebase não configurado — modo offline'; }
+}
+
+// ============================================================
+//  FIREBASE — CRUD (com fallback offline)
+// ============================================================
+async function fbSave(collection, data) {
+  if (!firebaseReady || !firestoreDB) return;
+  try { await firestoreDB.collection(collection).doc(data.id).set(data); } catch(e) { console.warn('fbSave fail', e); }
+}
+
+async function fbDelete(collection, id) {
+  if (!firebaseReady || !firestoreDB) return;
+  try { await firestoreDB.collection(collection).doc(id).delete(); } catch(e) { console.warn('fbDelete fail', e); }
+}
+
+async function fbLoadAll(collection) {
+  if (!firebaseReady || !firestoreDB) return null;
+  try {
+    const snap = await firestoreDB.collection(collection).get();
+    return snap.docs.map(d => d.data());
+  } catch(e) { console.warn('fbLoadAll fail', e); return null; }
+}
+
+// ============================================================
+//  CAMADA UNIFICADA save / delete / load
+// ============================================================
+async function save(storeName, data) {
+  await saveToDB(storeName, data);
+  fbSave(storeName, data); // não awaita — fire & forget
+}
+
+async function remove(storeName, id) {
+  await deleteFromDB(storeName, id);
+  fbDelete(storeName, id);
+}
+
+async function load(storeName) {
+  // Sempre lê do IndexedDB (rápido e offline)
+  return loadFromDB(storeName);
+}
+
+// ============================================================
+//  SYNC MANUAL — puxa do Firebase e atualiza IndexedDB
+// ============================================================
+async function manualSync() {
+  if (!firebaseReady) { toast('Firebase não configurado', 'info'); return; }
+  const btn = document.getElementById('syncBtn');
+  if (btn) btn.textContent = '⏳ Sincronizando...';
+  try {
+    for (const store of STORES) {
+      const remote = await fbLoadAll(store);
+      if (!remote) continue;
+      await clearStore(store);
+      for (const item of remote) await saveToDB(store, item);
+    }
+    await loadAllData();
+    toast('✅ Sincronizado com Firebase!');
+  } catch (e) {
+    toast('Erro ao sincronizar', 'error');
+    console.error(e);
+  } finally {
+    if (btn) btn.textContent = '🔄 Sincronizar';
+  }
+}
+
+// ============================================================
+//  FIREBASE CONFIG UI
+// ============================================================
+function saveFirebaseConfig() {
+  const cfg = {
+    apiKey:            document.getElementById('fb_apiKey').value.trim(),
+    authDomain:        document.getElementById('fb_authDomain').value.trim(),
+    projectId:         document.getElementById('fb_projectId').value.trim(),
+    storageBucket:     document.getElementById('fb_storageBucket').value.trim(),
+    messagingSenderId: document.getElementById('fb_messagingSenderId').value.trim(),
+    appId:             document.getElementById('fb_appId').value.trim(),
+  };
+  if (!cfg.apiKey || !cfg.projectId) { toast('Preencha pelo menos API Key e Project ID', 'error'); return; }
+  localStorage.setItem('techmemory_firebase', JSON.stringify(cfg));
+  toast('⏳ Conectando ao Firebase...');
+  initFirebase(cfg).then(ok => {
+    if (ok) { toast('🔥 Firebase conectado!'); }
+    else    { toast('Falha na conexão. Verifique as credenciais.', 'error'); }
+  });
+}
+
+function clearFirebaseConfig() {
+  if (!confirm('Remover configuração do Firebase?')) return;
+  localStorage.removeItem('techmemory_firebase');
+  firebaseReady = false;
+  firebaseApp = null; firestoreDB = null;
+  updateSyncBadge('offline');
+  toast('Configuração removida');
+}
+
+function loadFirebaseConfigFields() {
+  const cfg = getFirebaseConfig();
+  if (!cfg) return;
+  ['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'].forEach(k => {
+    const el = document.getElementById('fb_' + k);
+    if (el && cfg[k]) el.value = cfg[k];
+  });
+}
+
+async function testFirebaseConnection() {
+  const cfg = getFirebaseConfig();
+  if (!cfg) { toast('Configure o Firebase primeiro', 'info'); return; }
+  toast('⏳ Testando conexão...');
+  const ok = await initFirebase(cfg);
+  if (ok) toast('✅ Conexão bem-sucedida!');
+  else    toast('❌ Falha na conexão', 'error');
+}
+
+// ============================================================
+//  UTILITÁRIOS
+// ============================================================
+function generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
+function now()         { return new Date().toISOString(); }
+function formatDate(d) { if (!d) return ''; try { return new Date(d).toLocaleDateString('pt-BR'); } catch { return d; } }
+function formatDateTime(d) { if (!d) return ''; try { return new Date(d).toLocaleString('pt-BR'); } catch { return d; } }
+function escapeHtml(t) { if (t == null) return ''; const el = document.createElement('div'); el.textContent = String(t); return el.innerHTML; }
+
+function toast(message, type = 'success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = message;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2800);
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('mobileOverlay').classList.toggle('show');
+}
+
+function toggleTheme() {
+  document.body.classList.toggle('light');
+  localStorage.setItem('techmemory_theme', document.body.classList.contains('light') ? 'light' : 'dark');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  modalSaveCallback = null;
+}
+
+// FIX PRINCIPAL: showModal não usa toString() — usa closure corretamente
+function showModal(title, bodyHtml, onSave) {
+  modalSaveCallback = onSave;
+  document.getElementById('modalTitle').innerHTML = escapeHtml(title);
+  document.getElementById('modalBody').innerHTML = bodyHtml;
+  document.getElementById('modalFooter').innerHTML = `
+    <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" id="modalSaveBtn">Salvar</button>
+  `;
+  document.getElementById('modalSaveBtn').addEventListener('click', async () => {
+    if (modalSaveCallback) {
+      await modalSaveCallback();
+    }
+  });
+  document.getElementById('modalOverlay').classList.add('show');
+  // Focar primeiro input
+  setTimeout(() => { const f = document.querySelector('#modalBody input, #modalBody textarea, #modalBody select'); if (f) f.focus(); }, 100);
+}
+
+async function addActivity(desc) {
+  const item = { id: generateId(), description: desc, date: now() };
+  await save('activity', item);
+}
+
+// ============================================================
+//  NAVEGAÇÃO
+// ============================================================
+function navigateTo(page) {
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (navEl) navEl.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pageEl = document.getElementById(`page-${page}`);
+  if (pageEl) pageEl.classList.add('active');
+  // Fechar sidebar em mobile
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('mobileOverlay').classList.remove('show');
+
+  const renders = {
+    dashboard: renderDashboard,
+    notes:     renderNotes,
+    bookmarks: renderBookmarks,
+    ideas:     renderIdeas,
+    projects:  renderProjects,
+    tasks:     renderTasks,
+    reminders: renderReminders,
+    vault:     renderVault,
+    stats:     renderStats,
+    firebase:  loadFirebaseConfigFields,
+  };
+  if (renders[page]) renders[page]();
+  if (page === 'search') document.getElementById('searchPageInput')?.focus();
+}
+
+// ============================================================
+//  DASHBOARD
+// ============================================================
+async function renderDashboard() {
+  const stats = [
+    { icon: '📝', count: notes.length,                        label: 'Notas',    page: 'notes'     },
+    { icon: '✅', count: tasks.filter(t => !t.completed).length, label: 'Pendentes', page: 'tasks' },
+    { icon: '💡', count: ideas.length,                        label: 'Ideias',   page: 'ideas'     },
+    { icon: '🔖', count: bookmarks.length,                    label: 'Sites',    page: 'bookmarks' },
+    { icon: '📁', count: projects.length,                     label: 'Projetos', page: 'projects'  },
+    { icon: '⭐', count: notes.filter(n => n.favorite).length, label: 'Favoritas', page: 'notes'  },
+  ];
+  document.getElementById('dashStats').innerHTML = stats.map(s =>
+    `<div class="stat-card" onclick="navigateTo('${s.page}')">
+       <div class="stat-icon">${s.icon}</div>
+       <h3>${s.count}</h3><p>${s.label}</p>
+     </div>`
+  ).join('');
+  document.getElementById('currentDate').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const activities = await load('activity');
+  const sorted = activities.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
+  document.getElementById('activityList').innerHTML = sorted.length
+    ? sorted.map(a => `<div style="padding:9px;border-bottom:1px solid var(--border-soft);font-size:12px;">📌 ${escapeHtml(a.description)} <span style="color:var(--text-muted)">${formatDateTime(a.date)}</span></div>`).join('')
+    : '<div class="empty-state">Nenhuma atividade ainda</div>';
+}
+
+// ============================================================
+//  ANOTAÇÕES
+// ============================================================
+async function renderNotes() {
+  const search   = (document.getElementById('noteSearch')?.value || '').toLowerCase();
+  const category = document.getElementById('noteCategoryFilter')?.value || '';
+  let filtered = notes.filter(n =>
+    (!search || (n.title || '').toLowerCase().includes(search) || (n.content || '').toLowerCase().includes(search)) &&
+    (!category || n.category === category)
+  ).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const c = document.getElementById('notesList');
+  if (!filtered.length) { c.innerHTML = '<div class="empty-state">📭 Nenhuma anotação. Clique em + Nova.</div>'; return; }
+  c.innerHTML = filtered.map(n => `
+    <div class="data-table">
+      <div class="data-item">
+        <div class="item-header">
+          <div class="item-title">
+            <h4>${n.favorite ? '⭐' : '📄'} ${escapeHtml(n.title)}</h4>
+            <span class="badge badge-blue">${escapeHtml(n.category || 'Geral')}</span>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button class="btn-icon" onclick="toggleNoteFavorite('${n.id}')">${n.favorite ? '★' : '☆'}</button>
+            <button class="btn-icon" onclick="editNote('${n.id}')">✏️</button>
+            <button class="btn-icon" onclick="deleteNote('${n.id}')">🗑️</button>
+          </div>
+        </div>
+        <div class="item-content">${escapeHtml(n.content || '').replace(/\n/g, '<br>')}</div>
+        <div>${(n.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join(' ')}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:6px;">${formatDate(n.date)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function openNoteModal(note = null) {
+  showModal(note ? 'Editar Nota' : 'Nova Nota', `
+    <div class="form-group"><label>Título</label><input class="form-control" id="noteTitle" value="${escapeHtml(note?.title || '')}"></div>
+    <div class="form-group"><label>Categoria</label>
+      <select class="form-control" id="noteCategory">
+        ${['Trabalho','Estudos','Pessoal','Ideias'].map(o => `<option ${note?.category === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Conteúdo</label><textarea class="form-control" id="noteContent" rows="6">${escapeHtml(note?.content || '')}</textarea></div>
+    <div class="form-group"><label>Tags (separadas por vírgula)</label><input class="form-control" id="noteTags" value="${escapeHtml((note?.tags || []).join(', '))}"></div>
+  `, async () => {
+    const title = document.getElementById('noteTitle').value.trim();
+    if (!title) { toast('Título obrigatório', 'error'); return; }
+    const data = {
+      id:       note?.id || generateId(),
+      title,
+      category: document.getElementById('noteCategory').value,
+      content:  document.getElementById('noteContent').value,
+      tags:     document.getElementById('noteTags').value.split(',').map(t => t.trim()).filter(Boolean),
+      favorite: note?.favorite || false,
+      date:     now(),
+    };
+    await save('notes', data);
+    await addActivity(`${note ? 'Editou' : 'Criou'} nota: ${title}`);
+    notes = await load('notes');
+    renderNotes(); renderDashboard();
+    toast(note ? 'Nota atualizada!' : 'Nota criada!');
+    closeModal();
+  });
+}
+
+async function editNote(id) { const n = notes.find(n => n.id === id); if (n) openNoteModal(n); }
+async function deleteNote(id) {
+  if (!confirm('Excluir esta nota?')) return;
+  await remove('notes', id);
+  await addActivity('Excluiu uma nota');
+  notes = await load('notes');
+  renderNotes(); renderDashboard();
+  toast('Nota excluída!');
+}
+async function toggleNoteFavorite(id) {
+  const n = notes.find(n => n.id === id);
+  if (!n) return;
+  n.favorite = !n.favorite;
+  await save('notes', n);
+  notes = await load('notes');
+  renderNotes(); renderDashboard();
+}
+
+// ============================================================
+//  SITES FAVORITOS
+// ============================================================
+async function renderBookmarks() {
+  const search = (document.getElementById('bookmarkSearch')?.value || '').toLowerCase();
+  const filtered = bookmarks.filter(b => !search || (b.title || '').toLowerCase().includes(search) || (b.url || '').toLowerCase().includes(search));
+  const c = document.getElementById('bookmarksList');
+  if (!filtered.length) { c.innerHTML = '<div class="empty-state">🔖 Nenhum site</div>'; return; }
+  c.innerHTML = filtered.map(b => `
+    <div class="data-table"><div class="data-item">
+      <div class="item-header">
+        <div>
+          <h4>${escapeHtml(b.title)}</h4>
+          <a href="${escapeHtml(b.url)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-cyan);font-size:12px;">${escapeHtml(b.url)}</a>
+          ${b.notes ? `<p style="margin-top:5px;font-size:12px;">${escapeHtml(b.notes)}</p>` : ''}
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn-icon" onclick="editBookmark('${b.id}')">✏️</button>
+          <button class="btn-icon" onclick="deleteBookmark('${b.id}')">🗑️</button>
+        </div>
+      </div>
+    </div></div>`).join('');
+}
+
+function openBookmarkModal(bookmark = null) {
+  showModal(bookmark ? 'Editar Site' : 'Novo Site', `
+    <div class="form-group"><label>Título</label><input class="form-control" id="bookmarkTitle" value="${escapeHtml(bookmark?.title || '')}"></div>
+    <div class="form-group"><label>URL</label><input class="form-control" id="bookmarkUrl" type="url" value="${escapeHtml(bookmark?.url || '')}" placeholder="https://..."></div>
+    <div class="form-group"><label>Observações</label><textarea class="form-control" id="bookmarkNotes" rows="2">${escapeHtml(bookmark?.notes || '')}</textarea></div>
+  `, async () => {
+    const title = document.getElementById('bookmarkTitle').value.trim();
+    const url   = document.getElementById('bookmarkUrl').value.trim();
+    if (!title || !url) { toast('Preencha título e URL', 'error'); return; }
+    const data = { id: bookmark?.id || generateId(), title, url, notes: document.getElementById('bookmarkNotes').value, date: now() };
+    await save('bookmarks', data);
+    await addActivity(`${bookmark ? 'Editou' : 'Adicionou'} site: ${title}`);
+    bookmarks = await load('bookmarks');
+    renderBookmarks(); renderDashboard();
+    toast(bookmark ? 'Site atualizado!' : 'Site adicionado!');
+    closeModal();
+  });
+}
+
+async function editBookmark(id) { const b = bookmarks.find(b => b.id === id); if (b) openBookmarkModal(b); }
+async function deleteBookmark(id) {
+  if (!confirm('Excluir site?')) return;
+  await remove('bookmarks', id);
+  bookmarks = await load('bookmarks');
+  renderBookmarks();
+  toast('Site excluído!');
+}
+
+// ============================================================
+//  IDEIAS
+// ============================================================
+async function renderIdeas() {
+  const search   = (document.getElementById('ideaSearch')?.value || '').toLowerCase();
+  const priority = document.getElementById('ideaPriorityFilter')?.value || '';
+  const filtered = ideas.filter(i => (!search || (i.title || '').toLowerCase().includes(search)) && (!priority || i.priority === priority));
+  const c = document.getElementById('ideasList');
+  if (!filtered.length) { c.innerHTML = '<div class="empty-state">💡 Nenhuma ideia</div>'; return; }
+  c.innerHTML = filtered.map(i => `
+    <div class="data-table"><div class="data-item">
+      <div class="item-header">
+        <div>
+          <h4>💡 ${escapeHtml(i.title)}</h4>
+          ${i.description ? `<p style="font-size:13px;margin-top:4px;">${escapeHtml(i.description)}</p>` : ''}
+          <span class="badge ${i.priority === 'Alta' ? 'badge-gold' : i.priority === 'Baixa' ? 'badge-blue' : 'badge-violet'}" style="margin-top:5px;">${escapeHtml(i.priority || 'Média')}</span>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn-icon" onclick="editIdea('${i.id}')">✏️</button>
+          <button class="btn-icon" onclick="deleteIdea('${i.id}')">🗑️</button>
+        </div>
+      </div>
+    </div></div>`).join('');
+}
+
+function openIdeaModal(idea = null) {
+  showModal(idea ? 'Editar Ideia' : 'Nova Ideia', `
+    <div class="form-group"><label>Título</label><input class="form-control" id="ideaTitle" value="${escapeHtml(idea?.title || '')}"></div>
+    <div class="form-group"><label>Descrição</label><textarea class="form-control" id="ideaDescription" rows="4">${escapeHtml(idea?.description || '')}</textarea></div>
+    <div class="form-group"><label>Prioridade</label>
+      <select class="form-control" id="ideaPriority">
+        ${['Baixa','Média','Alta'].map(o => `<option ${(idea?.priority || 'Média') === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select>
+    </div>
+  `, async () => {
+    const title = document.getElementById('ideaTitle').value.trim();
+    if (!title) { toast('Título obrigatório', 'error'); return; }
+    const data = { id: idea?.id || generateId(), title, description: document.getElementById('ideaDescription').value, priority: document.getElementById('ideaPriority').value, date: now() };
+    await save('ideas', data);
+    await addActivity(`${idea ? 'Editou' : 'Criou'} ideia: ${title}`);
+    ideas = await load('ideas');
+    renderIdeas(); renderDashboard();
+    toast(idea ? 'Ideia atualizada!' : 'Ideia criada!');
+    closeModal();
+  });
+}
+
+async function editIdea(id) { const i = ideas.find(i => i.id === id); if (i) openIdeaModal(i); }
+async function deleteIdea(id) {
+  if (!confirm('Excluir ideia?')) return;
+  await remove('ideas', id);
+  ideas = await load('ideas');
+  renderIdeas();
+  toast('Ideia excluída!');
+}
+
+// ============================================================
+//  PROJETOS
+// ============================================================
+async function renderProjects() {
+  const search = (document.getElementById('projectSearch')?.value || '').toLowerCase();
+  const status = document.getElementById('projectStatusFilter')?.value || '';
+  const filtered = projects.filter(p => (!search || (p.name || '').toLowerCase().includes(search)) && (!status || p.status === status));
+  const c = document.getElementById('projectsList');
+  if (!filtered.length) { c.innerHTML = '<div class="empty-state">📁 Nenhum projeto</div>'; return; }
+  c.innerHTML = filtered.map(p => `
+    <div class="data-table"><div class="data-item">
+      <div class="item-header">
+        <div>
+          <h4>📁 ${escapeHtml(p.name)}</h4>
+          ${p.description ? `<p style="font-size:13px;margin-top:3px;">${escapeHtml(p.description)}</p>` : ''}
+          <span class="badge ${p.status === 'Concluído' ? 'badge-green' : p.status === 'Em andamento' ? 'badge-cyan' : 'badge-blue'}" style="margin-top:5px;">${escapeHtml(p.status || 'Planejamento')}</span>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn-icon" onclick="editProject('${p.id}')">✏️</button>
+          <button class="btn-icon" onclick="deleteProject('${p.id}')">🗑️</button>
+        </div>
+      </div>
+    </div></div>`).join('');
+}
+
+function openProjectModal(project = null) {
+  showModal(project ? 'Editar Projeto' : 'Novo Projeto', `
+    <div class="form-group"><label>Nome</label><input class="form-control" id="projectName" value="${escapeHtml(project?.name || '')}"></div>
+    <div class="form-group"><label>Descrição</label><textarea class="form-control" id="projectDescription" rows="3">${escapeHtml(project?.description || '')}</textarea></div>
+    <div class="form-group"><label>Status</label>
+      <select class="form-control" id="projectStatus">
+        ${['Planejamento','Em andamento','Concluído'].map(o => `<option ${(project?.status || 'Planejamento') === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select>
+    </div>
+  `, async () => {
+    const name = document.getElementById('projectName').value.trim();
+    if (!name) { toast('Nome obrigatório', 'error'); return; }
+    const data = { id: project?.id || generateId(), name, description: document.getElementById('projectDescription').value, status: document.getElementById('projectStatus').value, date: now() };
+    await save('projects', data);
+    await addActivity(`${project ? 'Editou' : 'Criou'} projeto: ${name}`);
+    projects = await load('projects');
+    renderProjects(); renderDashboard();
+    toast(project ? 'Projeto atualizado!' : 'Projeto criado!');
+    closeModal();
+  });
+}
+
+async function editProject(id) { const p = projects.find(p => p.id === id); if (p) openProjectModal(p); }
+async function deleteProject(id) {
+  if (!confirm('Excluir projeto?')) return;
+  await remove('projects', id);
+  projects = await load('projects');
+  renderProjects();
+  toast('Projeto excluído!');
+}
+
+// ============================================================
+//  TAREFAS
+// ============================================================
+async function renderTasks() {
+  const search   = (document.getElementById('taskSearch')?.value || '').toLowerCase();
+  const status   = document.getElementById('taskStatusFilter')?.value || '';
+  const priority = document.getElementById('taskPriorityFilter')?.value || '';
+  const filtered = tasks.filter(t =>
+    (!search || (t.title || '').toLowerCase().includes(search)) &&
+    (!status || t.status === status) &&
+    (!priority || t.priority === priority)
+  );
+  const c = document.getElementById('tasksList');
+  if (!filtered.length) { c.innerHTML = '<div class="empty-state">✅ Nenhuma tarefa</div>'; return; }
+  c.innerHTML = filtered.map(t => `
+    <div class="data-table"><div class="data-item">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;flex:1;">
+          <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTask('${t.id}')" style="width:17px;height:17px;cursor:pointer;accent-color:var(--accent-cyan);">
+          <div>
+            <h4 style="${t.completed ? 'text-decoration:line-through;opacity:.55;' : ''}">${escapeHtml(t.title)}</h4>
+            ${t.description ? `<p style="font-size:12px;color:var(--text-muted);margin-top:2px;">${escapeHtml(t.description)}</p>` : ''}
+            <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;">
+              <span class="badge ${t.priority === 'Alta' ? 'badge-gold' : t.priority === 'Baixa' ? 'badge-blue' : 'badge-violet'}">${escapeHtml(t.priority || 'Média')}</span>
+              <span class="badge">${escapeHtml(t.status || 'Pendente')}</span>
+              ${t.deadline ? `<span class="badge badge-cyan">📅 ${formatDate(t.deadline)}</span>` : ''}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn-icon" onclick="editTask('${t.id}')">✏️</button>
+          <button class="btn-icon" onclick="deleteTask('${t.id}')">🗑️</button>
+        </div>
+      </div>
+    </div></div>`).join('');
+}
+
+function openTaskModal(task = null) {
+  showModal(task ? 'Editar Tarefa' : 'Nova Tarefa', `
+    <div class="form-group"><label>Título</label><input class="form-control" id="taskTitle" value="${escapeHtml(task?.title || '')}"></div>
+    <div class="form-group"><label>Descrição</label><textarea class="form-control" id="taskDescription" rows="2">${escapeHtml(task?.description || '')}</textarea></div>
+    <div class="form-group"><label>Prioridade</label>
+      <select class="form-control" id="taskPriority">
+        ${['Baixa','Média','Alta'].map(o => `<option ${(task?.priority || 'Média') === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Status</label>
+      <select class="form-control" id="taskStatus">
+        ${['Pendente','Em andamento','Concluído'].map(o => `<option ${(task?.status || 'Pendente') === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group"><label>Prazo</label><input type="date" class="form-control" id="taskDeadline" value="${escapeHtml(task?.deadline || '')}"></div>
+  `, async () => {
+    const title = document.getElementById('taskTitle').value.trim();
+    if (!title) { toast('Título obrigatório', 'error'); return; }
+    const data = {
+      id: task?.id || generateId(), title,
+      description: document.getElementById('taskDescription').value,
+      priority:    document.getElementById('taskPriority').value,
+      status:      document.getElementById('taskStatus').value,
+      deadline:    document.getElementById('taskDeadline').value,
+      completed:   task?.completed || false,
+      date: now(),
+    };
+    await save('tasks', data);
+    await addActivity(`${task ? 'Editou' : 'Criou'} tarefa: ${title}`);
+    tasks = await load('tasks');
+    renderTasks(); renderDashboard();
+    toast(task ? 'Tarefa atualizada!' : 'Tarefa criada!');
+    closeModal();
+  });
+}
+
+async function editTask(id) { const t = tasks.find(t => t.id === id); if (t) openTaskModal(t); }
+async function deleteTask(id) {
+  if (!confirm('Excluir tarefa?')) return;
+  await remove('tasks', id);
+  tasks = await load('tasks');
+  renderTasks();
+  toast('Tarefa excluída!');
+}
+async function toggleTask(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  t.completed = !t.completed;
+  t.status    = t.completed ? 'Concluído' : 'Pendente';
+  await save('tasks', t);
+  await addActivity(t.completed ? `Concluiu tarefa: ${t.title}` : `Reabriu tarefa: ${t.title}`);
+  tasks = await load('tasks');
+  renderTasks(); renderDashboard();
+}
+
+// ============================================================
+//  LEMBRETES
+// ============================================================
+async function renderReminders() {
+  const search = (document.getElementById('reminderSearch')?.value || '').toLowerCase();
+  const filtered = reminders
+    .filter(r => !search || (r.title || '').toLowerCase().includes(search))
+    .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+  const c = document.getElementById('remindersList');
+  if (!filtered.length) { c.innerHTML = '<div class="empty-state">⏰ Nenhum lembrete</div>'; return; }
+  c.innerHTML = filtered.map(r => `
+    <div class="data-table"><div class="data-item">
+      <div class="item-header">
+        <div>
+          <h4>⏰ ${escapeHtml(r.title)}</h4>
+          ${r.description ? `<p style="font-size:12px;margin-top:3px;">${escapeHtml(r.description)}</p>` : ''}
+          <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;">
+            <span class="badge badge-gold">📅 ${formatDate(r.date)}</span>
+            <span class="badge badge-blue">🕐 ${escapeHtml(r.time || '--:--')}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn-icon" onclick="editReminder('${r.id}')">✏️</button>
+          <button class="btn-icon" onclick="deleteReminder('${r.id}')">🗑️</button>
+        </div>
+      </div>
+    </div></div>`).join('');
+}
+
+function openReminderModal(reminder = null) {
+  showModal(reminder ? 'Editar Lembrete' : 'Novo Lembrete', `
+    <div class="form-group"><label>Título</label><input class="form-control" id="reminderTitle" value="${escapeHtml(reminder?.title || '')}"></div>
+    <div class="form-group"><label>Descrição</label><textarea class="form-control" id="reminderDescription" rows="2">${escapeHtml(reminder?.description || '')}</textarea></div>
+    <div class="form-group"><label>Data</label><input type="date" class="form-control" id="reminderDate" value="${escapeHtml(reminder?.date || '')}"></div>
+    <div class="form-group"><label>Hora</label><input type="time" class="form-control" id="reminderTime" value="${escapeHtml(reminder?.time || '09:00')}"></div>
+  `, async () => {
+    const title = document.getElementById('reminderTitle').value.trim();
+    if (!title) { toast('Título obrigatório', 'error'); return; }
+    const data = {
+      id: reminder?.id || generateId(), title,
+      description: document.getElementById('reminderDescription').value,
+      date:        document.getElementById('reminderDate').value,
+      time:        document.getElementById('reminderTime').value,
+      dateCreated: now(),
+    };
+    await save('reminders', data);
+    await addActivity(`${reminder ? 'Editou' : 'Criou'} lembrete: ${title}`);
+    reminders = await load('reminders');
+    renderReminders();
+    toast(reminder ? 'Lembrete atualizado!' : 'Lembrete criado!');
+    closeModal();
+  });
+}
+
+async function editReminder(id) { const r = reminders.find(r => r.id === id); if (r) openReminderModal(r); }
+async function deleteReminder(id) {
+  if (!confirm('Excluir lembrete?')) return;
+  await remove('reminders', id);
+  reminders = await load('reminders');
+  renderReminders();
+  toast('Lembrete excluído!');
+}
+
+// ============================================================
+//  COFRE PESSOAL
+// ============================================================
+function renderVault() {
+  const c = document.getElementById('vaultContent');
+  if (!vaultItems.length) {
+    c.innerHTML = '<div class="empty-state">🔐 Nenhum item. Clique em + Item para adicionar.</div>';
+    return;
+  }
+  c.innerHTML = vaultItems.map(v => `
+    <div class="data-table"><div class="data-item">
+      <div class="item-header">
+        <div>
+          <h4>🔐 ${escapeHtml(v.title)}</h4>
+          <span class="badge badge-violet">${escapeHtml(v.type || 'Senha')}</span>
+          <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+            <span id="vaultShow_${v.id}" style="font-family:'JetBrains Mono',monospace;font-size:13px;">••••••••</span>
+            <button class="btn-icon" onclick="toggleVaultItem('${v.id}')">👁️</button>
+            <button class="btn-icon" onclick="copyToClipboard('${v.id}')">📋</button>
+          </div>
+        </div>
+        <button class="btn-icon" onclick="deleteVaultItem('${v.id}')">🗑️</button>
+      </div>
+    </div></div>`).join('');
+}
+
+function openVaultModal() {
+  showModal('Novo Item do Cofre', `
+    <div class="form-group"><label>Título</label><input class="form-control" id="vaultTitle"></div>
+    <div class="form-group"><label>Tipo</label>
+      <select class="form-control" id="vaultType">
+        <option>Senha</option><option>Cartão</option><option>Documento</option><option>Chave</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Conteúdo</label><textarea class="form-control" id="vaultContentInput" rows="3"></textarea></div>
+  `, async () => {
+    const title = document.getElementById('vaultTitle').value.trim();
+    if (!title) { toast('Título obrigatório', 'error'); return; }
+    const data = { id: generateId(), title, type: document.getElementById('vaultType').value, content: document.getElementById('vaultContentInput').value, date: now() };
+    await save('vault', data);
+    vaultItems = await load('vault');
+    renderVault();
+    toast('Item adicionado ao cofre!');
+    closeModal();
+  });
+}
+
+function toggleVaultItem(id) {
+  const el = document.getElementById(`vaultShow_${id}`);
+  if (!el) return;
+  const item = vaultItems.find(v => v.id === id);
+  if (!item) return;
+  el.textContent = el.textContent === '••••••••' ? item.content : '••••••••';
+}
+
+function copyToClipboard(id) {
+  const item = vaultItems.find(v => v.id === id);
+  if (!item) return;
+  navigator.clipboard.writeText(item.content).then(() => toast('📋 Copiado!')).catch(() => toast('Falha ao copiar', 'error'));
+}
+
+async function deleteVaultItem(id) {
+  if (!confirm('Excluir item do cofre?')) return;
+  await remove('vault', id);
+  vaultItems = await load('vault');
+  renderVault();
+  toast('Item excluído!');
+}
+
+// ============================================================
+//  ESTATÍSTICAS
+// ============================================================
+function renderStats() {
+  const total    = tasks.length;
+  const done     = tasks.filter(t => t.completed).length;
+  const progress = total > 0 ? Math.round(done / total * 100) : 0;
+  const cats     = notes.reduce((a, n) => { a[n.category || 'Geral'] = (a[n.category || 'Geral'] || 0) + 1; return a; }, {});
+  const priStats = { Alta: 0, Média: 0, Baixa: 0 };
+  [...tasks, ...ideas].forEach(x => { if (priStats[x.priority] !== undefined) priStats[x.priority]++; });
+
+  document.getElementById('statsGrid').innerHTML = [
+    { icon: '📝', v: notes.length,     l: 'Notas' },
+    { icon: '✅', v: done,             l: 'Concluídas' },
+    { icon: '📈', v: `${progress}%`,   l: 'Progresso' },
+    { icon: '📁', v: projects.length,  l: 'Projetos' },
+    { icon: '💡', v: ideas.length,     l: 'Ideias' },
+    { icon: '🔖', v: bookmarks.length, l: 'Sites' },
+  ].map(s => `<div class="stat-card"><div class="stat-icon">${s.icon}</div><h3>${s.v}</h3><p>${s.l}</p></div>`).join('');
+
+  document.getElementById('chartsArea').innerHTML = `
+    <div class="config-card">
+      <h3 style="font-size:13px;margin-bottom:10px;">📊 Progresso das Tarefas</h3>
+      <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+      <p style="margin-top:7px;font-size:12px;color:var(--text-muted);">${done} de ${total} tarefas concluídas</p>
+    </div>
+    <div class="config-card">
+      <h3 style="font-size:13px;margin-bottom:10px;">📁 Notas por Categoria</h3>
+      ${Object.entries(cats).map(([cat, count]) =>
+        `<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;">
+           <span>${escapeHtml(cat)}</span><span class="badge badge-cyan">${count}</span>
+         </div>`).join('') || '<p style="font-size:12px;color:var(--text-muted);">Nenhuma nota</p>'}
+    </div>
+    <div class="config-card">
+      <h3 style="font-size:13px;margin-bottom:10px;">⚡ Distribuição de Prioridades</h3>
+      ${Object.entries(priStats).map(([pri, cnt]) =>
+        `<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;">
+           <span>${pri}</span><span class="badge ${pri === 'Alta' ? 'badge-gold' : pri === 'Média' ? 'badge-violet' : 'badge-blue'}">${cnt}</span>
+         </div>`).join('')}
+    </div>
+  `;
+}
+
+// ============================================================
+//  BUSCA GLOBAL
+// ============================================================
+function executeGlobalSearch() {
+  const input = document.getElementById('globalSearchInput') || document.getElementById('searchPageInput');
+  const query = (input?.value || '').toLowerCase().trim();
+  if (!query) { toast('Digite algo para buscar', 'info'); return; }
+
+  const results = [];
+  const search = (items, type, titleField) =>
+    items.filter(i => (i[titleField] || '').toLowerCase().includes(query))
+         .forEach(i => results.push({ type, title: i[titleField] || i.title || i.name || '', preview: i.content || i.description || i.url || '' }));
+
+  search(notes,     '📝 Nota',     'title');
+  search(bookmarks, '🔖 Site',     'title');
+  search(ideas,     '💡 Ideia',    'title');
+  search(projects,  '📁 Projeto',  'name');
+  search(tasks,     '✅ Tarefa',   'title');
+  search(reminders, '⏰ Lembrete', 'title');
+
+  const c = document.getElementById('searchResults');
+  if (!results.length) {
+    c.innerHTML = `<div class="empty-state">🔍 Nenhum resultado para "${escapeHtml(query)}"</div>`;
+    navigateTo('search'); return;
+  }
+  const grouped = results.reduce((acc, r) => { acc[r.type] = acc[r.type] || []; acc[r.type].push(r); return acc; }, {});
+  c.innerHTML = Object.entries(grouped).map(([type, items]) =>
+    `<div class="config-card">
+       <h3 style="font-size:13px;margin-bottom:8px;">${type} (${items.length})</h3>
+       ${items.map(item =>
+         `<div style="padding:8px;border-bottom:1px solid var(--border-soft);">
+            <strong style="font-size:13px;">${escapeHtml(item.title)}</strong>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${escapeHtml((item.preview || '').substring(0, 90))}${item.preview.length > 90 ? '…' : ''}</div>
+          </div>`).join('')}
+     </div>`
+  ).join('');
+  navigateTo('search');
+  toast(`🔍 ${results.length} resultado(s)`);
+}
+
+// ============================================================
+//  BACKUP
+// ============================================================
+async function exportData() {
+  const data = { notes, bookmarks, ideas, projects, tasks, reminders, vault: vaultItems, exportedAt: now(), version: '2.1', app: 'TechMemory' };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `techmemory_backup_${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('📤 Backup exportado!');
+}
+
+async function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!confirm('⚠️ Isso substituirá todos os dados locais. Continuar?')) { event.target.value = ''; return; }
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    const map  = { notes, bookmarks, ideas, projects, tasks, reminders, vault: vaultItems };
+    for (const [key, items] of Object.entries(data)) {
+      if (!Array.isArray(items)) continue;
+      const store = key === 'vault' ? 'vault' : key;
+      if (!STORES.includes(store)) continue;
+      for (const item of items) await save(store, item);
+    }
+    await addActivity('Importou backup');
+    toast('✅ Backup importado! A recarregar...');
+    setTimeout(() => location.reload(), 1200);
+  } catch {
+    toast('Arquivo inválido ou corrompido', 'error');
+  }
+  event.target.value = '';
+}
+
+async function clearAllData() {
+  if (!confirm('⚠️ ATENÇÃO: Apagar TODOS os dados? Esta ação é irreversível!')) return;
+  if (!confirm('Tem a certeza absoluta?')) return;
+  for (const store of STORES) await clearStore(store);
+  toast('Todos os dados foram removidos');
+  setTimeout(() => location.reload(), 1000);
+}
+
+// ============================================================
+//  LOAD ALL
+// ============================================================
+async function loadAllData() {
+  [notes, bookmarks, ideas, projects, tasks, reminders, vaultItems] = await Promise.all([
+    load('notes'), load('bookmarks'), load('ideas'), load('projects'),
+    load('tasks'), load('reminders'), load('vault'),
+  ]);
+  renderDashboard();
+}
+
+// ============================================================
+//  INICIALIZAÇÃO
+// ============================================================
+// Tema
+const savedTheme = localStorage.getItem('techmemory_theme');
+if (savedTheme === 'light') document.body.classList.add('light');
+
+// Navegação
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => navigateTo(item.dataset.page));
+});
+
+// Fechar modal clicando fora
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+// Iniciar DB → carregar dados → tentar Firebase
+initDB().then(async () => {
+  await loadAllData();
+  const cfg = getFirebaseConfig();
+  if (cfg) {
+    initFirebase(cfg).then(ok => {
+      if (ok) toast('🔥 Firebase conectado!');
+    });
+  }
+});
+
+// Expor globais necessários para atributos onclick em HTML dinâmico
+Object.assign(window, {
+  navigateTo, toggleTheme, toggleSidebar, closeModal,
+  openNoteModal, openBookmarkModal, openIdeaModal, openProjectModal, openTaskModal, openReminderModal, openVaultModal,
+  editNote, deleteNote, toggleNoteFavorite,
+  editBookmark, deleteBookmark,
+  editIdea, deleteIdea,
+  editProject, deleteProject,
+  editTask, deleteTask, toggleTask,
+  editReminder, deleteReminder,
+  toggleVaultItem, copyToClipboard, deleteVaultItem,
+  executeGlobalSearch,
+  exportData, importData, clearAllData,
+  saveFirebaseConfig, clearFirebaseConfig, testFirebaseConnection,
+  manualSync,
+  renderNotes, renderBookmarks, renderIdeas, renderProjects, renderTasks, renderReminders,
+});
+</script>
+</body>
+</html>
