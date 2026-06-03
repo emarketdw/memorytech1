@@ -3,6 +3,10 @@
 .env.local
 .env.*.local
 
+# Firebase Configuration
+firebase-config.js
+firebase-config.local.js
+
 # Dependencies
 node_modules/
 package-lock.json
