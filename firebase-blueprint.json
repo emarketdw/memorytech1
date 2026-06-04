@@ -1,0 +1,173 @@
+{
+  "entities": {
+    "Note": {
+      "title": "Note",
+      "description": "Estudos e anotações do usuário",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID único da nota" },
+        "title": { "type": "string", "description": "Título da nota" },
+        "category": { "type": "string", "description": "Categoria (Trabalho, Estudos, Pessoal, Ideias)" },
+        "content": { "type": "string", "description": "Conteúdo de texto da nota" },
+        "tags": { "type": "array", "description": "Lista de tags/rótulos" },
+        "favorite": { "type": "boolean", "description": "Se a nota é favorita" },
+        "date": { "type": "string", "format": "date-time", "description": "Data de criação ou modificação" },
+        "userId": { "type": "string", "description": "ID do usuário dono da nota" }
+      },
+      "required": ["id", "title", "category", "content", "favorite", "date", "userId"]
+    },
+    "Bookmark": {
+      "title": "Bookmark",
+      "description": "Sites e referências favoritas do usuário",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID único" },
+        "title": { "type": "string", "description": "Título do site" },
+        "url": { "type": "string", "description": "Endereço URL completo" },
+        "notes": { "type": "string", "description": "Anotações adicionais sobre o link" },
+        "date": { "type": "string", "format": "date-time", "description": "Data de adição" },
+        "userId": { "type": "string", "description": "ID do usuário" }
+      },
+      "required": ["id", "title", "url", "date", "userId"]
+    },
+    "Idea": {
+      "title": "Idea",
+      "description": "Ideias e pensamentos rápidos do usuário",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID único" },
+        "title": { "type": "string", "description": "Título ou resumo da ideia" },
+        "description": { "type": "string", "description": "Descrição detalhada" },
+        "priority": { "type": "string", "enum": ["Baixa", "Média", "Alta"], "description": "Nível de prioridade" },
+        "tags": { "type": "array", "description": "Lista de tags/rótulos" },
+        "date": { "type": "string", "format": "date-time", "description": "Data de criação" },
+        "userId": { "type": "string", "description": "ID do usuário" }
+      },
+      "required": ["id", "title", "priority", "date", "userId"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Projetos em desenvolvimento ou planejamento",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID único" },
+        "name": { "type": "string", "description": "Nome do projeto" },
+        "description": { "type": "string", "description": "Descrição do escopo" },
+        "status": { "type": "string", "enum": ["Planejamento", "Em andamento", "Concluído"], "description": "Estado atual" },
+        "tags": { "type": "array", "description": "Lista de tags/rótulos" },
+        "date": { "type": "string", "format": "date-time", "description": "Data de alteração" },
+        "userId": { "type": "string", "description": "ID do usuário" }
+      },
+      "required": ["id", "name", "status", "date", "userId"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Tarefas associadas ao fluxo de trabalho",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID único" },
+        "title": { "type": "string", "description": "Título da tarefa" },
+        "description": { "type": "string", "description": "Instruções ou notas da tarefa" },
+        "priority": { "type": "string", "enum": ["Baixa", "Média", "Alta"], "description": "Prioridade de execução" },
+        "status": { "type": "string", "enum": ["Pendente", "Em andamento", "Concluído"], "description": "Estado" },
+        "deadline": { "type": "string", "description": "Data limite opcional" },
+        "completed": { "type": "boolean", "description": "Status de conclusão rápida" },
+        "date": { "type": "string", "format": "date-time", "description": "Data de alteração" },
+        "userId": { "type": "string", "description": "ID do usuário" }
+      },
+      "required": ["id", "title", "priority", "status", "completed", "date", "userId"]
+    },
+    "Reminder": {
+      "title": "Reminder",
+      "description": "Lembretes com data e hora específicas",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID único" },
+        "title": { "type": "string", "description": "Título do lembrete" },
+        "description": { "type": "string", "description": "Descrição do objeto do lembrete" },
+        "date": { "type": "string", "description": "Data do lembrete (yyyy-mm-dd)" },
+        "time": { "type": "string", "description": "Hora do lembrete (hh:mm)" },
+        "dateCreated": { "type": "string", "format": "date-time", "description": "Data de criação" },
+        "userId": { "type": "string", "description": "ID do usuário" }
+      },
+      "required": ["id", "title", "date", "time", "dateCreated", "userId"]
+    },
+    "VaultItem": {
+      "title": "VaultItem",
+      "description": "Cofre privado do usuário",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID único" },
+        "title": { "type": "string", "description": "Título descritivo" },
+        "type": { "type": "string", "enum": ["Senha", "Cartão", "Documento", "Chave"], "description": "Tipo de segredo" },
+        "content": { "type": "string", "description": "Conteúdo criptografado / escondido" },
+        "date": { "type": "string", "format": "date-time", "description": "Data de atualização" },
+        "userId": { "type": "string", "description": "ID do usuário" }
+      },
+      "required": ["id", "title", "type", "content", "date", "userId"]
+    },
+    "Activity": {
+      "title": "Activity",
+      "description": "Log de atividades do usuário",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID único" },
+        "description": { "type": "string", "description": "Descrição da atividade realizada" },
+        "date": { "type": "string", "format": "date-time", "description": "Data da ação" },
+        "userId": { "type": "string", "description": "ID do usuário" }
+      },
+      "required": ["id", "description", "date", "userId"]
+    },
+    "CustomTag": {
+      "title": "CustomTag",
+      "description": "Etiquetas de categorização customizáveis",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID único da tag" },
+        "name": { "type": "string", "description": "Nome da etiqueta" },
+        "color": { "type": "string", "description": "Cor de fundo ou classe Tailwind" },
+        "date": { "type": "string", "format": "date-time", "description": "Data de criação" },
+        "userId": { "type": "string", "description": "ID do usuário dono" }
+      },
+      "required": ["id", "name", "color", "date", "userId"]
+    }
+  },
+  "firestore": {
+    "customtags/{customtagId}": {
+      "schema": "CustomTag",
+      "description": "Armazena etiquetas personalizáveis do usuário"
+    },
+    "notes/{noteId}": {
+      "schema": "Note",
+      "description": "Armazena notas e anotações do usuário"
+    },
+    "bookmarks/{bookmarkId}": {
+      "schema": "Bookmark",
+      "description": "Armazena links e sites favoritos do usuário"
+    },
+    "ideas/{ideaId}": {
+      "schema": "Idea",
+      "description": "Armazena ideias de estudo e trabalho"
+    },
+    "projects/{projectId}": {
+      "schema": "Project",
+      "description": "Armazena projetos de estudo e trabalho"
+    },
+    "tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Armazena lista de tarefas do usuário"
+    },
+    "reminders/{reminderId}": {
+      "schema": "Reminder",
+      "description": "Armazena lembretes agendados"
+    },
+    "vault/{vaultId}": {
+      "schema": "VaultItem",
+      "description": "Armazena credenciais e segredos no cofre privado"
+    },
+    "activity/{activityId}": {
+      "schema": "Activity",
+      "description": "Armazena logs de atividades recentes"
+    }
+  }
+}

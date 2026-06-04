@@ -1,0 +1,6 @@
+{
+  "name": "TechMemory",
+  "description": "Uma base de dados pessoal e pesquisável para armazenar notas de estudo, marcadores de sites, ideias, projetos, tarefas e segredos, com suporte offline-first e sincronização em nuvem via Firebase Firestore.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

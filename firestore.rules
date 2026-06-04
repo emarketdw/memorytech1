@@ -1,0 +1,230 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net - default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Hardened Global Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Auth tokens do not contain custom role claims in our setup.
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && userId == request.auth.uid;
+    }
+
+    // --- Enterprise Validation Blueprints ---
+
+    // 1. Note Validation
+    function isValidNote(data) {
+      return data.keys().hasAll(['id', 'title', 'category', 'content', 'favorite', 'date', 'userId'])
+        && data.keys().size() <= 8
+        && data.id is string && data.id.size() <= 128
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.category is string && data.category.size() <= 50
+        && data.content is string && data.content.size() <= 50000
+        && data.favorite is bool
+        && data.date is string && data.date.size() <= 50
+        && data.userId is string && data.userId.size() <= 128
+        && (!data.keys().hasAny(['tags']) || data.tags is list)
+        && (data.userId == request.auth.uid);
+    }
+
+    // 2. Bookmark Validation
+    function isValidBookmark(data) {
+      return data.keys().hasAll(['id', 'title', 'url', 'date', 'userId'])
+        && data.keys().size() <= 6
+        && data.id is string && data.id.size() <= 128
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.url is string && data.url.size() > 0 && data.url.size() <= 2048
+        && (!data.keys().hasAny(['notes']) || data.notes is string && data.notes.size() <= 5000)
+        && data.date is string && data.date.size() <= 50
+        && data.userId is string && data.userId.size() <= 128
+        && (data.userId == request.auth.uid);
+    }
+
+    // 3. Idea Validation
+    function isValidIdea(data) {
+      return data.keys().hasAll(['id', 'title', 'priority', 'date', 'userId'])
+        && data.keys().size() <= 8
+        && data.id is string && data.id.size() <= 128
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && (!data.keys().hasAny(['description']) || data.description is string && data.description.size() <= 5000)
+        && data.priority is string && data.priority in ['Baixa', 'Média', 'Alta']
+        && (!data.keys().hasAny(['tags']) || data.tags is list)
+        && data.date is string && data.date.size() <= 50
+        && data.userId is string && data.userId.size() <= 128
+        && (data.userId == request.auth.uid);
+    }
+
+    // 4. Project Validation
+    function isValidProject(data) {
+      return data.keys().hasAll(['id', 'name', 'status', 'date', 'userId'])
+        && data.keys().size() <= 8
+        && data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && (!data.keys().hasAny(['description']) || data.description is string && data.description.size() <= 5000)
+        && data.status is string && data.status in ['Planejamento', 'Em andamento', 'Concluído']
+        && (!data.keys().hasAny(['tags']) || data.tags is list)
+        && data.date is string && data.date.size() <= 50
+        && data.userId is string && data.userId.size() <= 128
+        && (data.userId == request.auth.uid);
+    }
+
+    // 5. Task Validation
+    function isValidTask(data) {
+      return data.keys().hasAll(['id', 'title', 'priority', 'status', 'completed', 'date', 'userId'])
+        && data.keys().size() <= 9
+        && data.id is string && data.id.size() <= 128
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && (!data.keys().hasAny(['description']) || data.description is string && data.description.size() <= 5000)
+        && data.priority is string && data.priority in ['Baixa', 'Média', 'Alta']
+        && data.status is string && data.status in ['Pendente', 'Em andamento', 'Concluído']
+        && data.completed is bool
+        && (!data.keys().hasAny(['deadline']) || data.deadline is string && data.deadline.size() <= 50)
+        && data.date is string && data.date.size() <= 50
+        && data.userId is string && data.userId.size() <= 128
+        && (data.userId == request.auth.uid);
+    }
+
+    // 6. Reminder Validation
+    function isValidReminder(data) {
+      return data.keys().hasAll(['id', 'title', 'date', 'time', 'dateCreated', 'userId'])
+        && data.keys().size() <= 7
+        && data.id is string && data.id.size() <= 128
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && (!data.keys().hasAny(['description']) || data.description is string && data.description.size() <= 5000)
+        && data.date is string && data.date.size() <= 50
+        && data.time is string && data.time.size() <= 20
+        && data.dateCreated is string && data.dateCreated.size() <= 50
+        && data.userId is string && data.userId.size() <= 128
+        && (data.userId == request.auth.uid);
+    }
+
+    // 7. Vault Item Validation
+    function isValidVaultItem(data) {
+      return data.keys().hasAll(['id', 'title', 'type', 'content', 'date', 'userId'])
+        && data.keys().size() <= 6
+        && data.id is string && data.id.size() <= 128
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.type is string && data.type in ['Senha', 'Cartão', 'Documento', 'Chave']
+        && data.content is string && data.content.size() <= 10000
+        && data.date is string && data.date.size() <= 50
+        && data.userId is string && data.userId.size() <= 128
+        && (data.userId == request.auth.uid);
+    }
+
+    // 8. Activity Validation
+    function isValidActivity(data) {
+      return data.keys().hasAll(['id', 'description', 'date', 'userId'])
+        && data.keys().size() <= 4
+        && data.id is string && data.id.size() <= 128
+        && data.description is string && data.description.size() > 0 && data.description.size() <= 1000
+        && data.date is string && data.date.size() <= 50
+        && data.userId is string && data.userId.size() <= 128
+        && (data.userId == request.auth.uid);
+    }
+
+    // 9. Custom Tag Validation
+    function isValidCustomTag(data) {
+      return data.keys().hasAll(['id', 'name', 'color', 'date', 'userId'])
+        && data.keys().size() <= 5
+        && data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.color is string && data.color.size() <= 50
+        && data.date is string && data.date.size() <= 50
+        && data.userId is string && data.userId.size() <= 128
+        && (data.userId == request.auth.uid);
+    }
+
+    // --- Collection Level Rules ---
+
+    // NOTES Rules
+    match /notes/{noteId} {
+      allow get, delete: if isSignedIn() && isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(noteId) && isValidNote(incoming());
+      allow update: if isSignedIn() && isValidId(noteId) && isOwner(existing().userId) && isValidNote(incoming()) && incoming().userId == existing().userId;
+    }
+
+    // BOOKMARKS Rules
+    match /bookmarks/{bookmarkId} {
+      allow get, delete: if isSignedIn() && isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(bookmarkId) && isValidBookmark(incoming());
+      allow update: if isSignedIn() && isValidId(bookmarkId) && isOwner(existing().userId) && isValidBookmark(incoming()) && incoming().userId == existing().userId;
+    }
+
+    // IDEAS Rules
+    match /ideas/{ideaId} {
+      allow get, delete: if isSignedIn() && isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(ideaId) && isValidIdea(incoming());
+      allow update: if isSignedIn() && isValidId(ideaId) && isOwner(existing().userId) && isValidIdea(incoming()) && incoming().userId == existing().userId;
+    }
+
+    // PROJECTS Rules
+    match /projects/{projectId} {
+      allow get, delete: if isSignedIn() && isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(projectId) && isValidProject(incoming());
+      allow update: if isSignedIn() && isValidId(projectId) && isOwner(existing().userId) && isValidProject(incoming()) && incoming().userId == existing().userId;
+    }
+
+    // TASKS Rules
+    match /tasks/{taskId} {
+      allow get, delete: if isSignedIn() && isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(taskId) && isValidTask(incoming());
+      allow update: if isSignedIn() && isValidId(taskId) && isOwner(existing().userId) && isValidTask(incoming()) && incoming().userId == existing().userId;
+    }
+
+    // REMINDERS Rules
+    match /reminders/{reminderId} {
+      allow get, delete: if isSignedIn() && isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(reminderId) && isValidReminder(incoming());
+      allow update: if isSignedIn() && isValidId(reminderId) && isOwner(existing().userId) && isValidReminder(incoming()) && incoming().userId == existing().userId;
+    }
+
+    // VAULT Rules
+    match /vault/{vaultId} {
+      allow get, delete: if isSignedIn() && isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(vaultId) && isValidVaultItem(incoming());
+      allow update: if isSignedIn() && isValidId(vaultId) && isOwner(existing().userId) && isValidVaultItem(incoming()) && incoming().userId == existing().userId;
+    }
+
+    // ACTIVITY Rules
+    match /activity/{activityId} {
+      allow get, delete: if isSignedIn() && isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(activityId) && isValidActivity(incoming());
+      allow update: if isSignedIn() && isValidId(activityId) && isOwner(existing().userId) && isValidActivity(incoming()) && incoming().userId == existing().userId;
+    }
+
+    // CUSTOM TAGS Rules
+    match /customtags/{customtagId} {
+      allow get, delete: if isSignedIn() && isOwner(existing().userId);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(customtagId) && isValidCustomTag(incoming());
+      allow update: if isSignedIn() && isValidId(customtagId) && isOwner(existing().userId) && isValidCustomTag(incoming()) && incoming().userId == existing().userId;
+    }
+  }
+}
