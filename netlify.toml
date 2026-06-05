@@ -1,15 +1,13 @@
 [build]
-  command = "echo 'No build needed'"
-  publish = "."
+  command = "npm run build"
+  publish = "dist"
   base = "."
 
-# Redirecionar 404 para techmemory.html (SPA fallback)
 [[redirects]]
   from = "/*"
-  to = "/techmemory.html"
+  to = "/index.html"
   status = 200
 
-# Headers de segurança
 [[headers]]
   for = "/*"
   [headers.values]
@@ -19,7 +17,6 @@
     Referrer-Policy = "no-referrer"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
-# Cache headers para arquivos estáticos
 [[headers]]
   for = "/*.{js,css,woff,woff2,ttf}"
   [headers.values]
@@ -29,11 +26,3 @@
   for = "/*"
   [headers.values]
     Cache-Control = "public, max-age=3600, must-revalidate"
-
-# Permitir IndexedDB e LocalStorage
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization"
